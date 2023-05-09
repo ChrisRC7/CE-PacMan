@@ -1,15 +1,14 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef ENEMY_H
+#define ENEMY_H
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <string>
 
-class Player {
+class Enemy {
 public:
-    Player(SDL_Renderer* renderer, int matrix[25][25]);
-    ~Player();
-    void handleEvent(SDL_Event& e);
+    Enemy(SDL_Renderer* renderer, int matrix[25][25]);
+    ~Enemy();
     void move();
     void render();
     void getTexture(SDL_Renderer* renderer1);

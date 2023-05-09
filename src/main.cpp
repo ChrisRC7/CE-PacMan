@@ -12,9 +12,9 @@ using namespace std;
 const int rowm= 25;
 const int colm= 25;
 
-const int WINDOW_WIDTH = 880;
-const int WINDOW_HEIGHT = 680;
-const int CELL_SIZE = 25;
+const int WINDOW_WIDTH = 825;
+const int WINDOW_HEIGHT = 625;
+const int CELL_SIZE = WINDOW_HEIGHT / rowm;
 
 int main(int argc, char* argv[]) {
     std::srand(std::time(nullptr));
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
     SDL_Surface* surface = SDL_CreateRGBSurface(0, CELL_SIZE+8, CELL_SIZE, 32, 0, 0, 0, 0);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // establacer el color de fondo en rojo
-    SDL_RenderClear(renderer); // limpiar la pantalla con el color de fondo
+    //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // establacer el color de fondo en rojo
+    //SDL_RenderClear(renderer); // limpiar la pantalla con el color de fondo
 
     for (int row = 0; row < rowm; ++row)
     {
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
     // Esperar hasta que se cierre la ventana
     bool running = true;
     SDL_Event event;
-    Player player(renderer);
+    Player player(renderer, matrix);
     
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -166,7 +166,8 @@ int main(int argc, char* argv[]) {
         //SDL_DestroyTexture(texture);
     
         // Actualizar la pantalla
-        //SDL_RenderPresent(renderer);  
+        //SDL_RenderPresent(renderer);
+        SDL_Delay(175);  
     }
     
     // Liberar recursos y salir
