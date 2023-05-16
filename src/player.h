@@ -13,6 +13,8 @@ public:
     void move();
     void render();
     void getTexture(SDL_Renderer* renderer1);
+    int* getPos();
+
 
 
 private:

@@ -2,10 +2,11 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 #include <string>
-#include <cstdlib>
+#include <cstdlib>  
 #include <ctime>
 
 #include "player.cpp"
+#include "enemy.cpp"
 using namespace std;
 
 
@@ -149,6 +150,7 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event event;
     Player player(renderer, matrix);
+    Enemy enemy1(renderer, matrix, "img/red.png", &player);
     
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -156,6 +158,7 @@ int main(int argc, char* argv[]) {
                 running = false;
             }
             player.handleEvent(event);
+            enemy1.handleEvent(event);
             
           
 
@@ -163,6 +166,7 @@ int main(int argc, char* argv[]) {
         }
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         player.render();
+        enemy1.render();
         //SDL_DestroyTexture(texture);
     
         // Actualizar la pantalla

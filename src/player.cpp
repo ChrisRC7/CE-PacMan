@@ -10,7 +10,7 @@ Player::Player(SDL_Renderer* renderer1, int matrix1[25][25]) {
         std::cout << "Failed to load image: " << IMG_GetError() << std::endl;
         return;
     }
-    dirrection= "right";
+    dirrection= "down";
     for (int i = 0; i < 25; i++)
     {
         for (int j = 0; j < 25; j++)
@@ -49,9 +49,9 @@ void Player::handleEvent(SDL_Event& event) {
                 dirrection = "right";
                 break;
 
-            case SDLK_r:
+            /*case SDLK_r:
                 std::cout<<x<<std::endl;
-                break;
+                break;*/
         }
     }
 }
@@ -89,4 +89,11 @@ void Player::getTexture(SDL_Renderer* renderer1){
     SDL_RenderCopy(renderer1, texture, NULL, &destRect);
     SDL_RenderPresent(renderer); 
 
+}
+
+int* Player::getPos(){
+    static int pos[2];
+    pos[0]= x/25;
+    pos[1]= y/25;
+    return pos;
 }

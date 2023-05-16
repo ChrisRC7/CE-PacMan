@@ -1,16 +1,18 @@
 #include "enemy.h"
 #include <iostream>
 #include <vector>
-#include <queue>
-#include <cmath>
 #include <algorithm>
+#include <set>
+using namespace std;
 
 
-Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[25][25]) {
+
+Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[25][25], const char* img, Player* player1) {
     // Cargar la imagen del jugador
     x= 0;
     y= 0;
-    SDL_Surface* surface = IMG_Load("img/pac1.png");
+    player= player1;
+    SDL_Surface* surface = IMG_Load(img);
     if (surface == nullptr) {
         std::cout << "Failed to load image: " << IMG_GetError() << std::endl;
         return;
@@ -58,65 +60,310 @@ void Enemy::move() {
     }
 }
 
-void Enemy::render() {
-    // Renderizar la textura del jugador en la posición actual
-    Enemy::move();
-    SDL_Rect rect = { x, y, 24, 24 };
-    SDL_RenderCopy(renderer, texture, NULL, &rect);
-    SDL_RenderPresent(renderer); 
-}
-
 void Enemy::getTexture(SDL_Renderer* renderer1){
     SDL_RenderCopy(renderer1, texture, NULL, &destRect);
     SDL_RenderPresent(renderer); 
 
 }
 
-struct Point {
-    int x, y;
-    Point(int _x, int _y) : x(_x), y(_y) {}
+// Estructura para representar un nodo en el mapa
+struct Node {
+    int x, y;   // Coordenadas del nodo
+    int g, h, f; // Valores de los costos para A*
+    Node* parent; // Puntero al nodo padre para reconstruir el camino
+
+    Node(int _x, int _y) {
+        x = _x;
+        y = _y;
+        g = h = f = 0;
+        parent = NULL;
+    }
 };
 
-// Función para obtener la distancia euclidiana entre dos puntos
-double getDistance(Point a, Point b) {
-    return std::sqrt(std::pow(b.x - a.x, 2) + std::pow(b.y - a.y, 2));
+// Función auxiliar para calcular la distancia Manhattan entre dos nodos
+int heuristic(Node* a, Node* b) {
+    return abs(a->x - b->x) + abs(a->y - b->y);
 }
 
-// Función de pathfinding
-std::vector<Point> pathfinding(int matrix[25][25], int startX, int startY, int endX, int endY) {
-    std::priority_queue<std::pair<double, Point>, std::vector<std::pair<double, Point>>, std::greater<std::pair<double, Point>>> pq;
-    pq.push({0, Point(startX, startY)});
-    std::vector<Point> prev(25 * 25, Point(-1, -1));
-    std::vector<double> dist(25 * 25, 1e9);
-    dist[startY * 25 + startX] = 0;
-    while (!pq.empty()) {
-        Point curr = pq.top().second;
-        pq.pop();
-        if (curr.x == endX && curr.y == endY) {
-            break;
+// Función auxiliar para buscar un nodo en un vector por sus coordenadas
+bool contains_node(vector<Node*>& vec, Node* node) {
+    return find_if(vec.begin(), vec.end(), [&](Node* n) {
+        return n->x == node->x && n->y == node->y;
+    }) != vec.end();
+}
+
+// Función auxiliar para obtener un nodo de un vector por sus coordenadas
+Node* get_node(vector<Node*>& vec, int x, int y) {
+    auto it = find_if(vec.begin(), vec.end(), [&](Node* n) {
+        return n->x == x && n->y == y;
+    });
+    if (it != vec.end()) {
+        return *it;
+    }
+    return NULL;
+}
+
+bool inOpenList(vector<Node*>& open_list, Node* node) {
+    for (Node* open_node : open_list) {
+        if (open_node == node) {
+            return true;
         }
-        int dx[] = {-1, 0, 1, 0};
-        int dy[] = {0, 1, 0, -1};
-        for (int i = 0; i < 4; i++) {
-            int nextX = curr.x + dx[i];
-            int nextY = curr.y + dy[i];
-            if (nextX >= 0 && nextX < 25 && nextY >= 0 && nextY < 25 && matrix[nextY][nextX] != 1) {
-                double weight = getDistance(curr, Point(nextX, nextY));
-                if (dist[curr.y * 25 + curr.x] + weight < dist[nextY * 25 + nextX]) {
-                    dist[nextY * 25 + nextX] = dist[curr.y * 25 + curr.x] + weight;
-                    prev[nextY * 25 + nextX] = curr;
-                    pq.push({dist[nextY * 25 + nextX], Point(nextX, nextY)});
-                }
+    }
+    return false;
+}
+
+// Función para verificar si un nodo está en la lista cerrada
+bool inClosedList(vector<Node*>& closed_list, Node* node) {
+    for (Node* n : closed_list) {
+        if (n == node) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Node* getNodeFromList(vector<Node*>& list, Node* node) {
+    for (Node* list_node : list) {
+        if (list_node->x == node->x && list_node->y == node->y) {
+            return list_node;
+        }
+    }
+    return NULL;
+}
+
+
+void printList(vector<Node*> list) {
+    for (Node* node : list) {
+        cout << "(" << node->x << ", " << node->y << ")" << " -> ";
+    }
+    cout << endl;
+}
+
+std::vector<std::vector<int>> transformMatrix(int matrix[25][25]) {
+    std::vector<std::vector<int>> result(25, std::vector<int>(25));
+
+    for (int i = 0; i < 25; i++) {
+        for (int j = 0; j < 25; j++) {
+            result[i][j] = matrix[i][j];
+        }
+    }
+
+    return result;
+}
+
+// Función principal para el algoritmo de A*
+vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_x, int end_y) {
+    // Crear el nodo de inicio y de destino
+    Node* start_node = new Node(start_x, start_y);
+    Node* end_node = new Node(end_x, end_y);
+
+    // Crear las listas abierta y cerrada
+    vector<Node*> open_list;
+    vector<Node*> closed_list;
+
+    // Añadir el nodo de inicio a la lista abierta
+    open_list.push_back(start_node);
+
+    // Repetir hasta que la lista abierta esté vacía
+    int iteration= 0;
+    while (!open_list.empty()) {
+        // Encontrar el nodo con menor costo f en la lista abierta
+        Node* current_node = open_list[0];
+        for (int i = 1; i < open_list.size(); i++) {
+            if (open_list[i]->f < current_node->f) {
+                current_node = open_list[i];
             }
         }
+
+        // Mover el nodo actual de la lista abierta a la cerrada
+        open_list.erase(remove(open_list.begin(), open_list.end(), current_node), open_list.end());
+        closed_list.push_back(current_node);
+
+        // Si el nodo actual es el nodo de destino, reconstruir el camino
+        if (current_node->x == end_node->x && current_node->y == end_node->y) {
+            vector<Node*> path;
+            Node* node = current_node;
+            while (node != NULL) {
+                path.push_back(node);
+                node = node->parent;
+            }
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        // Explorar los vecinos del nodo actual
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                // Ignorar el propio nodo actual y los nodos diagonales
+                if ((i == 0 && j == 0) || (i != 0 && j != 0)) {
+                    continue;
+                }
+
+                int new_x = current_node->x + i;
+                int new_y = current_node->y + j;
+
+                // Ignorar los nodos fuera de los límites del mapa
+                if (new_x < 0 || new_x >= 25 || new_y < 0 || new_y >= 25) {
+                    continue;
+                }
+
+                // Ignorar los nodos que son muros
+                if (matrix[new_y][new_x] == 1) {
+                    continue;
+                }
+
+                // Crear el nuevo nodo y calcular su valor f
+                Node* neighbor = new Node(new_x, new_y);
+                neighbor->parent = current_node;
+                neighbor->g = current_node->g + 1;
+                neighbor->h = heuristic(neighbor, end_node);
+                neighbor->f = neighbor->g + neighbor->h;
+
+                // Si el vecino ya está en la lista cerrada, ignorarlo
+                if (inClosedList(closed_list, neighbor)) {
+                    delete neighbor;
+                    continue;
+                }
+
+                // Si el vecino ya está en la lista abierta, actualizar su valor f si es menor
+                if (inOpenList(open_list, neighbor)) {
+                    Node* existing_node = getNodeFromList(open_list, neighbor);
+                    if (neighbor->g < existing_node->g) {
+                        existing_node->g = neighbor->g;
+                        existing_node->f = existing_node->g + existing_node->h;
+                        existing_node->parent = neighbor->parent;
+                    }
+                    delete neighbor;
+                    continue;
+                }
+
+                // Agregar el vecino a la lista abierta
+                open_list.push_back(neighbor);
+            }
+        }
+
+        // Imprimir los datos de la iteración actual
+        std::cout << "Iteración " << iteration << "\n";
+        std::cout << "Celda seleccionada: (" << current_node->x << ", " << current_node->y << ")\n";
+        std::cout << "Open list:\n";
+        printList(open_list);
+        std::cout << "Closed list:\n";
+        printList(closed_list);
+
+        iteration++;
     }
-    std::vector<Point> path;
-    Point curr(endX, endY);
-    while (curr.x != startX || curr.y != startY) {
-        path.push_back(curr);
-        curr = prev[curr.y * 25 + curr.x];
+
+    // Si llegamos aquí, no se encontró un camino válido
+    return std::vector<Node*>();
+}
+
+vector<pair<int, int>> backtracking(int matriz[25][25], int start_row, int start_col, int end_row, int end_col) {
+    // Verificar si las coordenadas de inicio y final son válidas
+    if (matriz[start_row][start_col] == 1 || matriz[end_row][end_col] == 1) {
+        cout << "Coordenadas de inicio o final inválidas" << endl;
+        return {};
     }
-    path.push_back(Point(startX, startY));
-    std::reverse(path.begin(), path.end());
-    return path;
+
+    // Declarar una pila para rastrear el camino y un conjunto para rastrear las celdas visitadas
+    vector<pair<int, int>> camino;
+    set<pair<int, int>> visitadas;
+
+    // Agregar la celda de inicio a la pila y al conjunto de visitadas
+    camino.push_back(make_pair(start_row, start_col));
+    visitadas.insert(make_pair(start_row, start_col));
+
+    // Iterar mientras haya celdas en la pila
+    while (!camino.empty()) {
+        // Obtener la celda actual de la pila
+        pair<int, int> celda_actual = camino.back();
+        int row = celda_actual.first;
+        int col = celda_actual.second;
+
+        // Si la celda actual es la celda final, devolver el camino
+        if (row == end_row && col == end_col) {
+            return camino;
+        }
+            // Imprimir la celda actual y el camino recorrido hasta ese momento
+        cout << "Celda actual: (" << row << ", " << col << ")" << endl;
+        cout << "Camino recorrido: ";
+        for (auto p : camino) {
+            cout << "(" << p.first << ", " << p.second << ") ";
+        }
+        cout << endl;
+
+        // Obtener las celdas adyacentes y agregarlas a la pila si aún no han sido visitadas
+        if (row > 0 && matriz[row-1][col] == 0 && !visitadas.count(make_pair(row-1, col))) {
+            camino.push_back(make_pair(row-1, col));
+            visitadas.insert(make_pair(row-1, col));
+            continue;
+        }
+        if (row < 24 && matriz[row+1][col] == 0 && !visitadas.count(make_pair(row+1, col))) {
+            camino.push_back(make_pair(row+1, col));
+            visitadas.insert(make_pair(row+1, col));
+            continue;
+        }
+        if (col > 0 && matriz[row][col-1] == 0 && !visitadas.count(make_pair(row, col-1))) {
+            camino.push_back(make_pair(row, col-1));
+            visitadas.insert(make_pair(row, col-1));
+            continue;
+        }
+        if (col < 24 && matriz[row][col+1] == 0 && !visitadas.count(make_pair(row, col+1))) {
+            camino.push_back(make_pair(row, col+1));
+            visitadas.insert(make_pair(row, col+1));
+            continue;
+        }
+
+        // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+        camino.pop_back();
+    }
+
+    // Si no se puede encontrar un camino, devolver una lista vacía
+    cout << "No se encontró ningún camino" << endl;
+    return {};
+}
+
+void printList2(vector<pair<int, int>> camino){
+    for (auto p : camino) {
+    cout << "(" << p.first << ", " << p.second << ") ";
+    }
+    cout << endl;
+}
+
+
+
+void Enemy::render() {
+    // Renderizar la textura del jugador en la posición actual
+    //Enemy::move();
+    SDL_Rect rect = { x, y, 24, 24 };
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
+    SDL_RenderPresent(renderer); 
+}
+
+
+
+
+void Enemy::handleEvent(SDL_Event& event) {
+    // Manejar eventos de teclado para mover al jugador
+    int* pos;
+    std::vector<std::vector<int>> vector1;
+    std::vector<Node *> ruta1;
+    std::vector<pair<int, int>> ruta2;
+    if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
+        switch (event.key.keysym.sym) {
+            case SDLK_r:
+                pos= player->getPos();
+                vector1= transformMatrix(matrix);
+                ruta1= astar(vector1, x, y, pos[0], pos[1]);
+                std::cout<<"La ruta es: "<<endl;
+                printList(ruta1);
+                break;
+
+            case SDLK_t:
+                int* pos= player->getPos();
+                ruta2= backtracking(matrix, x, y, pos[0], pos[1]);
+                std::cout<<"La ruta es: "<<endl;
+                printList2(ruta2);
+                break;
+        }
+    }
 }
