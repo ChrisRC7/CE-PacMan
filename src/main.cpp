@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 #include <iostream>
 #include <string>
 #include <cstdlib>  
@@ -10,12 +11,12 @@
 using namespace std;
 
 
-const int rowm= 25;
-const int colm= 25;
+const int rowm= 10;
+const int colm= 10;
 
-const int WINDOW_WIDTH = 825;
-const int WINDOW_HEIGHT = 625;
-const int CELL_SIZE = WINDOW_HEIGHT / rowm;
+const int WINDOW_WIDTH = 830;
+const int WINDOW_HEIGHT = 630;
+const int CELL_SIZE = 10;
 
 int main(int argc, char* argv[]) {
     std::srand(std::time(nullptr));
@@ -103,40 +104,12 @@ int main(int argc, char* argv[]) {
     // Crear un renderizador
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, CELL_SIZE+8, CELL_SIZE, 32, 0, 0, 0, 0);
-    //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // establacer el color de fondo en rojo
-    //SDL_RenderClear(renderer); // limpiar la pantalla con el color de fondo
-
-    for (int row = 0; row < rowm; ++row)
-    {
-        for (int col = 0; col < colm; ++col)
-        {
-            
-            SDL_Rect cellRect = { col, row, CELL_SIZE, CELL_SIZE };
-
-            if (matrix[row][col] == 1)
-            {
-                SDL_FillRect(surface, &cellRect, SDL_MapRGB(surface->format, 0, 64, 255));
-            }
-            else
-            {
-                SDL_FillRect(surface, &cellRect, SDL_MapRGB(surface->format, 0, 0, 0));
-            }
-        }
-    }
-
-    SDL_Rect cellRect = { 25, 0, CELL_SIZE, CELL_SIZE };
-    SDL_FillRect(surface, &cellRect, SDL_MapRGB(surface->format, 255, 0, 0));
+    SDL_Surface* surface = SDL_CreateRGBSurface(0, CELL_SIZE+((WINDOW_WIDTH-WINDOW_HEIGHT)/63), CELL_SIZE, 32, 0, 0, 0, 0);
     
 
-    
-    if (renderer == NULL) {
-        SDL_Log("Error al crear el renderizador: %s", SDL_GetError());
-        return 1;
-    }
-    
     // Crear la textura a partir de la superficie
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
 
 
     // Actualizar la ventana
@@ -150,7 +123,7 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event event;
     Player player(renderer, matrix);
-    Enemy enemy1(renderer, matrix, "img/red.png", &player);
+    Enemy enemy1(renderer, matrix, "img/red.png", &player, 0);
     
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -159,14 +132,25 @@ int main(int argc, char* argv[]) {
             }
             player.handleEvent(event);
             enemy1.handleEvent(event);
+            /*if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
+              switch (event.key.keysym.sym) {
+                  case SDLK_j:
+                      for (int i = 0; i < 25; i++) {
+                      for (int j = 0; j < 25; j++) {
+                          cout << "En x: " << i << " En y: " << j << " tiene valor de: " << matrix[i][j] << endl;
+                      }
+                      }
+                      break;
+              }
+            }*/
             
           
 
 
         }
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
-        player.render();
-        enemy1.render();
+        //SDL_RenderCopy(renderer, texture, NULL, NULL);
+        //enemy1.render();
+        player.render(renderer, surface);
         //SDL_DestroyTexture(texture);
     
         // Actualizar la pantalla
@@ -181,4 +165,67 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
     
     return 0;
+}
+
+
+void matrizrandom(){
+    std::srand(std::time(nullptr));
+    int num1 = 0, num2 = 1;
+    int p1=10, p2= 10;
+
+    int matrix[rowm][colm];
+    
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            matrix[i][j]=0;
+        }
+        
+    }
+    
+    for (int i = 1; i < rowm; i++)
+    {
+        for (int j = 1; j < colm; j++)
+        {
+            if (matrix[i+1][j+1]!=1 and matrix[i+1][j-1]!=1 and matrix[i-1][j+1]!=1 and matrix[i-1][j-1]!=1){
+                int rand_num = std::rand() % (p1 + p2) + 1; // Generar un número aleatorio entre 1 y la suma de las posibilidades
+                if (rand_num <= p1) {
+                    matrix[i][j]=1;
+                    p2+=3; // Aumentar la posibilidad del otro número
+                } else {
+                    p1++; // Aumentar la posibilidad del otro número
+                }
+            }
+            
+        }
+        
+    }
+
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            if (matrix[i][j]==0 and (matrix[i+1][j]==1 and matrix[i-1][j]==1)){
+                matrix[i][j]=1;
+            }
+        }
+        
+    }
+
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            if (matrix[i][j]==0 and (matrix[i+1][j]==1 and matrix[i-1][j]==1 and matrix[i][j+1]==1 and matrix[i][j-1]==1)){
+                if (j<colm-1)
+                {
+                    matrix[i][j+1]=0;
+                } else{
+                    matrix[i][j-1]=0;
+                }
+            }
+        }
+        
+    }
 }

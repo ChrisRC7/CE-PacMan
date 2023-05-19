@@ -6,11 +6,11 @@
 using namespace std;
 
 
-
-Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[25][25], const char* img, Player* player1) {
+Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[guia][guia], const char* img, Player* player1, int numEnem) {
     // Cargar la imagen del jugador
     x= 0;
     y= 0;
+    numEnemigo= numEnem;
     player= player1;
     SDL_Surface* surface = IMG_Load(img);
     if (surface == nullptr) {
@@ -18,9 +18,9 @@ Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[25][25], const char* img, Play
         return;
     }
     dirrection= "right";
-    for (int i = 0; i < 25; i++)
+    for (int i = 0; i < guia; i++)
     {
-        for (int j = 0; j < 25; j++)
+        for (int j = 0; j < guia; j++)
         {
             matrix[i][j]= matrix1[i][j];
         }
@@ -29,7 +29,7 @@ Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[25][25], const char* img, Play
     
     renderer= renderer1;
     texture = SDL_CreateTextureFromSurface(renderer1, surface);
-    SDL_Rect rect = { x, y, 24, 24 };
+    SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer);
     //SDL_FreeSurface(surface);
@@ -39,9 +39,20 @@ Enemy::~Enemy() {
     //SDL_DestroyTexture(texture);
 }
 
-void Enemy::move() {
+void Enemy::move(int rut[2]) {
+    int y1= rut[0];
+    int x1= rut[1];
+    if (x1>(x/guia2) && matrix[y1][x1] != 1){
+        x+=guia2;
+    } else if(y1>(y/guia2) && matrix[y1][x1] != 1){
+        y+=guia2;
+    } else if(x/(guia2>x1) && y1==(y/guia2) && matrix[y1][x1] != 1){
+        x-=guia2;
+    } else {
+        y-=guia2;
+    }
     // Actualizar la posición del jugador
-    if (dirrection == "up"){
+    /*if (dirrection == "up"){
         if(matrix[y/25 - 1][x/25] != 1 && y>0){
             y -= 25;
         }
@@ -57,7 +68,7 @@ void Enemy::move() {
         if(matrix[y/25][x/25 + 1] != 1 && x<600){
             x += 25;
         }
-    }
+    }*/
 }
 
 void Enemy::getTexture(SDL_Renderer* renderer1){
@@ -66,19 +77,7 @@ void Enemy::getTexture(SDL_Renderer* renderer1){
 
 }
 
-// Estructura para representar un nodo en el mapa
-struct Node {
-    int x, y;   // Coordenadas del nodo
-    int g, h, f; // Valores de los costos para A*
-    Node* parent; // Puntero al nodo padre para reconstruir el camino
 
-    Node(int _x, int _y) {
-        x = _x;
-        y = _y;
-        g = h = f = 0;
-        parent = NULL;
-    }
-};
 
 // Función auxiliar para calcular la distancia Manhattan entre dos nodos
 int heuristic(Node* a, Node* b) {
@@ -139,11 +138,11 @@ void printList(vector<Node*> list) {
     cout << endl;
 }
 
-std::vector<std::vector<int>> transformMatrix(int matrix[25][25]) {
-    std::vector<std::vector<int>> result(25, std::vector<int>(25));
+std::vector<std::vector<int>> transformMatrix(int matrix[guia][guia]) {
+    std::vector<std::vector<int>> result(guia, std::vector<int>(guia));
 
-    for (int i = 0; i < 25; i++) {
-        for (int j = 0; j < 25; j++) {
+    for (int i = 0; i < guia; i++) {
+        for (int j = 0; j < guia; j++) {
             result[i][j] = matrix[i][j];
         }
     }
@@ -152,7 +151,7 @@ std::vector<std::vector<int>> transformMatrix(int matrix[25][25]) {
 }
 
 // Función principal para el algoritmo de A*
-vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_x, int end_y) {
+vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
     // Crear el nodo de inicio y de destino
     Node* start_node = new Node(start_x, start_y);
     Node* end_node = new Node(end_x, end_y);
@@ -203,7 +202,7 @@ vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int e
                 int new_y = current_node->y + j;
 
                 // Ignorar los nodos fuera de los límites del mapa
-                if (new_x < 0 || new_x >= 25 || new_y < 0 || new_y >= 25) {
+                if (new_x < 0 || new_x >= guia || new_y < 0 || new_y >= guia) {
                     continue;
                 }
 
@@ -257,12 +256,22 @@ vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int e
     return std::vector<Node*>();
 }
 
-vector<pair<int, int>> backtracking(int matriz[25][25], int start_row, int start_col, int end_row, int end_col) {
+void prueba(int matri[guia][guia]) {
+    for (int i = 0; i < guia; i++) {
+        for (int j = 0; j < guia; j++) {
+            cout << "En x: " << i << " En y: " << j << " tiene valor de: " << matri[i][j] << endl;
+        }
+    }
+}
+
+
+vector<pair<int, int>> backtracking(int matriz[guia][guia], int start_row, int start_col, int end_row, int end_col) {
     // Verificar si las coordenadas de inicio y final son válidas
-    if (matriz[start_row][start_col] == 1 || matriz[end_row][end_col] == 1) {
+    if (matriz[start_row][start_col] == 1 && matriz[end_row][end_col] == 1) {
         cout << "Coordenadas de inicio o final inválidas" << endl;
         return {};
     }
+    prueba(matriz);
 
     // Declarar una pila para rastrear el camino y un conjunto para rastrear las celdas visitadas
     vector<pair<int, int>> camino;
@@ -273,6 +282,7 @@ vector<pair<int, int>> backtracking(int matriz[25][25], int start_row, int start
     visitadas.insert(make_pair(start_row, start_col));
 
     // Iterar mientras haya celdas en la pila
+    int iteration= 0;
     while (!camino.empty()) {
         // Obtener la celda actual de la pila
         pair<int, int> celda_actual = camino.back();
@@ -281,6 +291,7 @@ vector<pair<int, int>> backtracking(int matriz[25][25], int start_row, int start
 
         // Si la celda actual es la celda final, devolver el camino
         if (row == end_row && col == end_col) {
+            cout<<matriz<<endl;
             return camino;
         }
             // Imprimir la celda actual y el camino recorrido hasta ese momento
@@ -290,32 +301,202 @@ vector<pair<int, int>> backtracking(int matriz[25][25], int start_row, int start
             cout << "(" << p.first << ", " << p.second << ") ";
         }
         cout << endl;
+        std::cout << "Iteración " << iteration << "\n";
+        iteration++;
 
         // Obtener las celdas adyacentes y agregarlas a la pila si aún no han sido visitadas
-        if (row > 0 && matriz[row-1][col] == 0 && !visitadas.count(make_pair(row-1, col))) {
-            camino.push_back(make_pair(row-1, col));
-            visitadas.insert(make_pair(row-1, col));
-            continue;
+        if (start_col<end_col && start_row<=end_row){
+             if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+        } else if(start_col<end_col && start_row>=end_row){
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back(); 
+        }else if(start_col>end_col && start_col<=end_col){
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                    cout<<matriz[row][col-1]<<endl;
+                    camino.push_back(make_pair(row, col-1));
+                    visitadas.insert(make_pair(row, col-1));
+                    continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+        } else if(start_row<=end_row && start_col<end_col){
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+        } else if (start_row>end_row){
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+        } else if(start_col<=end_col) {
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+        } else{
+            if (col > 0 && matriz[row][col-1] != 1 && !visitadas.count(make_pair(row, col-1))) {
+                cout<<matriz[row][col-1]<<endl;
+                camino.push_back(make_pair(row, col-1));
+                visitadas.insert(make_pair(row, col-1));
+                continue;
+            }
+            if (row > 0 && matriz[row-1][col] != 1 && !visitadas.count(make_pair(row-1, col))) {
+                cout<<matriz[row-1][col]<<endl;
+                camino.push_back(make_pair(row-1, col));
+                visitadas.insert(make_pair(row-1, col));
+                continue;
+            }
+            if (col < guia-1 && matriz[row][col+1] != 1 && !visitadas.count(make_pair(row, col+1))) {
+                cout<<matriz[row][col+1]<<endl;
+                camino.push_back(make_pair(row, col+1));
+                visitadas.insert(make_pair(row, col+1));
+                continue;
+            }
+            if (row < guia-1 && matriz[row+1][col] != 1 && !visitadas.count(make_pair(row+1, col))) {
+                cout<<matriz[row+1][col]<<endl;
+                camino.push_back(make_pair(row+1, col));
+                visitadas.insert(make_pair(row+1, col));
+                continue;
+            }
+            // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
+            camino.pop_back();
+            }
         }
-        if (row < 24 && matriz[row+1][col] == 0 && !visitadas.count(make_pair(row+1, col))) {
-            camino.push_back(make_pair(row+1, col));
-            visitadas.insert(make_pair(row+1, col));
-            continue;
-        }
-        if (col > 0 && matriz[row][col-1] == 0 && !visitadas.count(make_pair(row, col-1))) {
-            camino.push_back(make_pair(row, col-1));
-            visitadas.insert(make_pair(row, col-1));
-            continue;
-        }
-        if (col < 24 && matriz[row][col+1] == 0 && !visitadas.count(make_pair(row, col+1))) {
-            camino.push_back(make_pair(row, col+1));
-            visitadas.insert(make_pair(row, col+1));
-            continue;
-        }
-
-        // Si no hay celdas adyacentes sin visitar, retroceder al nodo anterior
-        camino.pop_back();
-    }
+        
 
     // Si no se puede encontrar un camino, devolver una lista vacía
     cout << "No se encontró ningún camino" << endl;
@@ -329,22 +510,44 @@ void printList2(vector<pair<int, int>> camino){
     cout << endl;
 }
 
-
-
-void Enemy::render() {
-    // Renderizar la textura del jugador en la posición actual
-    //Enemy::move();
-    SDL_Rect rect = { x, y, 24, 24 };
-    SDL_RenderCopy(renderer, texture, NULL, &rect);
-    SDL_RenderPresent(renderer); 
+int* move1(vector<Node*> list, int x2, int y2) {
+    int x1;
+    int y1;
+    static int pos[2];
+    for (Node* node : list) {
+        x1= node->x;
+        y1= node->y;
+        if(x1!=x2 or y1!=y2) {
+            pos[0]= y1;
+            pos[1]= x1;
+            return pos;
+        }
+    }
+    return nullptr;
 }
 
-
+int* move2(vector<pair<int, int>> camino, int x2, int y2){
+    int x1;
+    int y1;
+    static int pos[2];
+    int len= camino.size();
+    for (int i = 0; i<len; i++) {
+        y1= camino[i].first;
+        x1= camino[i].second;
+        if(x1!=x2 or y1!=y2) {
+            pos[0]= y1;
+            pos[1]= x1;
+            return pos;
+        }
+    }
+    return nullptr;
+}
 
 
 void Enemy::handleEvent(SDL_Event& event) {
     // Manejar eventos de teclado para mover al jugador
     int* pos;
+    int* pos2;
     std::vector<std::vector<int>> vector1;
     std::vector<Node *> ruta1;
     std::vector<pair<int, int>> ruta2;
@@ -353,17 +556,74 @@ void Enemy::handleEvent(SDL_Event& event) {
             case SDLK_r:
                 pos= player->getPos();
                 vector1= transformMatrix(matrix);
-                ruta1= astar(vector1, x, y, pos[0], pos[1]);
+                ruta1= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
                 std::cout<<"La ruta es: "<<endl;
                 printList(ruta1);
+                pos2= move1(ruta1, x/guia2, y/guia2);
+                if (pos2!=nullptr){
+                    Enemy::move(pos2);
+                    std::cout<<pos2[0]<<endl;
+                    std::cout<<pos2[1]<<endl;
+                }
                 break;
 
             case SDLK_t:
-                int* pos= player->getPos();
-                ruta2= backtracking(matrix, x, y, pos[0], pos[1]);
+                pos= player->getPos();
+                ruta2= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
                 std::cout<<"La ruta es: "<<endl;
                 printList2(ruta2);
+                pos2= move2(ruta2,  x/guia2, y/guia2);
+                if (pos2!=nullptr){
+                    Enemy::move(pos2);
+                    std::cout<<pos2[0]<<endl;
+                    std::cout<<pos2[1]<<endl;
+                }
                 break;
+            case SDLK_h:
+                pos= player->getPos();
+                cout<<matrix[pos[0]+1][pos[1]]<<endl;
+                break;
+
         }
     }
+}
+
+void Enemy::moveback(){
+    int* pos2= move2(back,  x/guia2, y/guia2);
+    if (pos2!=nullptr){
+        Enemy::move(pos2);
+        back.erase(back.begin());
+    }
+}
+
+void Enemy::moveast(){
+    int *pos2= move1(ast, x/guia2, y/guia2);
+    if (pos2!=nullptr){
+        Enemy::move(pos2);
+        ast.erase(ast.begin());
+    }
+}
+
+
+void Enemy::render() {
+    // Renderizar la textura del jugador en la posición actual
+    //Enemy::move();
+    int* pos;
+    int* pos2;
+    std::vector<std::vector<int>> vector1;
+    std::vector<Node *> ruta1;
+    std::vector<pair<int, int>> ruta2;
+    if(player->getpoderD()){
+        if(numEnemigo%2==0){
+            pos= player->getPoder();
+            back= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
+        } else{
+            pos= player->getPoder();
+            vector1= transformMatrix(matrix);
+            ast= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
+        }
+    }
+    SDL_Rect rect = { x, y, guia2, guia2};
+    SDL_RenderCopy(renderer, texture, NULL, &rect);
+    SDL_RenderPresent(renderer); 
 }
