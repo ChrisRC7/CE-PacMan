@@ -29,13 +29,14 @@ public:
     ~Enemy();
     void handleEvent(SDL_Event& e);
     void move(int rut[2]);
-    void render();
+    void render(SDL_Renderer* render, SDL_Surface* surface);
     void getTexture(SDL_Renderer* renderer1);
     void setPos(int x, int y);
     void newPos();
     void moveback();
     void moveast();
     void setmatrix(int mat[guia][guia]);
+    void desactivar();
 
 
 
@@ -50,6 +51,7 @@ private:
     int numEnemigo;
     bool buscando;
     int matrix[guia][guia];
+    bool muerto;
     std::string dirrection;
     Player* player;
     vector<pair<int, int>> back;

@@ -41,7 +41,7 @@ Player::Player(SDL_Renderer* renderer1, int matrix1[guia][guia]) {
     color = {255, 255, 255}; // Color del texto (blanco)
     
     renderer= renderer1;
-    texture = SDL_CreateTextureFromSurface(renderer1, surface);
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer);
@@ -54,9 +54,8 @@ Player::~Player() {
 
 
 void Player::desactivar() {
-    std::this_thread::sleep_for(std::chrono::seconds(6));
+    std::this_thread::sleep_for(std::chrono::seconds(5));
     poderA=false;
-    cout<<"se desac"<<endl;
 }
 
 int Player::getnivel(){
@@ -107,7 +106,7 @@ void Player::move() {
             if(matrix[y/guia2][x/guia2]==0){
                 puntaje+=10;
                 matrix[y/guia2][x/guia2]=2;
-            } else if(matrix[y/guia2][x/guia2]==0){
+            } else if(matrix[y/guia2][x/guia2]==3){
                 poderD=false;
                 poderA=true;
                 std::thread hilo(&Player::desactivar, this);
@@ -169,7 +168,8 @@ void Player::move() {
 }
 
 void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
-    if(poderD==false && puntaje%200==0 && puntaje>199){
+    Player::move();
+    if(poderD==false && puntaje%200==0 && puntaje>199 && poderA==false){
         poderD=true;
         std::srand(std::time(nullptr));
         while(true){
@@ -215,7 +215,7 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
         nivel++;
     }
 
-    /*char texto1[30];
+    char texto1[30];
     char texto2[30];
     char texto3[30];
     snprintf(texto1, sizeof(texto1), "Vida: %d", vida); // Formatear el texto con el valor del entero
@@ -232,7 +232,7 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     // Posición del texto en la pantalla
     SDL_Rect textRect1 = {640, 0, textSurface1->w, textSurface1->h};
     SDL_Rect textRect2 = {640, 30, textSurface2->w, textSurface2->h};
-    SDL_Rect textRect3 = {640, 60, textSurface3->w, textSurface3->h};*/
+    SDL_Rect textRect3 = {640, 60, textSurface3->w, textSurface3->h};
 
 
     SDL_Rect cellRect = { 10, 0, guia, guia };
@@ -242,10 +242,9 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     SDL_RenderCopy(render2, texture1, NULL, NULL);
     SDL_RenderPresent(render2);
     // Renderizar la textura de texto en el renderizador
-    /*SDL_RenderCopy(renderer, textTexture1, NULL, &textRect1);
+    SDL_RenderCopy(renderer, textTexture1, NULL, &textRect1);
     SDL_RenderCopy(renderer, textTexture2, NULL, &textRect2);
-    SDL_RenderCopy(renderer, textTexture3, NULL, &textRect3);*/
-    Player::move();
+    SDL_RenderCopy(renderer, textTexture3, NULL, &textRect3);
     SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer); 
@@ -272,8 +271,8 @@ void Player::setEnemigosPos(int i, int pos[2]){
 }
 
 
-int* getRandomPosition(int enemigos[4][2]) {
-    const int minima_distancia = 3;
+int* getRandomPosition(int enemigos[4][2], int matrix[guia][guia]) {
+    const int minima_distancia = 5;
     int row, col;
     int* pos= new int[2];
     std::srand(std::time(nullptr));
@@ -284,7 +283,7 @@ int* getRandomPosition(int enemigos[4][2]) {
             int y2 = enemigos[i][0];
             int x2 = enemigos[i][1];
             double distancia = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));    
-            if (distancia < minima_distancia) {
+            if (distancia > minima_distancia && matrix[y1][x1]!=1) {
                 pos[0]=y1;
                 pos[1]=x1;
                 return pos;
@@ -298,7 +297,7 @@ int* getRandomPosition(int enemigos[4][2]) {
 
 void Player::reducirVida(){
     --vida;
-    int* newPos= getRandomPosition(enemigos);
+    int* newPos= getRandomPosition(enemigos, matrix);
     x= newPos[1]*guia2;
     y= newPos[0]*guia2;
 }
@@ -312,15 +311,12 @@ bool Player::getpoderD() {
 }
 
 int* Player::getPoder(){
-    static int pos[2];
-    pos[0]= podery/guia2;
-    pos[1]= poderx/guia2;
-    return pos;
+    return posPoder;
 }
 
 void Player::quitar(){
     poderD=false;
-    matrix[podery][poderx]=2;
+    matrix[posPoder[0]][posPoder[1]]=2;
 }
 
 int Player::getvida(){
@@ -342,4 +338,11 @@ void Player::setmatrix(int mat[guia][guia]){
 void Player::resetpos(){
     x=0;
     y=0;
+    vida=3;
+    poderA= false;
+    poderD= false;
+}
+
+void Player::puntos(){
+    puntaje+=50;
 }

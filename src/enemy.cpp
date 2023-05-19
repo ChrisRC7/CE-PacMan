@@ -8,8 +8,8 @@ using namespace std;
 
 Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[guia][guia], const char* img, Player* player1, int numEnem) {
     // Cargar la imagen del jugador
-    Enemy::newPos();
     buscando= false;
+    muerto= false;
     numEnemigo= numEnem;
     player= player1;
     SDL_Surface* surface = IMG_Load(img);
@@ -33,6 +33,7 @@ Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[guia][guia], const char* img, 
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer);
     //SDL_FreeSurface(surface);
+    Enemy::newPos();
 }
 
 Enemy::~Enemy() {
@@ -151,7 +152,7 @@ std::vector<std::vector<int>> transformMatrix(int matrix[guia][guia]) {
 }
 
 // Función principal para el algoritmo de A*
-vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
+vector<Node*> astarP(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
     // Crear el nodo de inicio y de destino
     Node* start_node = new Node(start_x, start_y);
     Node* end_node = new Node(end_x, end_y);
@@ -256,14 +257,101 @@ vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int e
     return std::vector<Node*>();
 }
 
-void prueba(int matri[guia][guia]) {
-    for (int i = 0; i < guia; i++) {
-        for (int j = 0; j < guia; j++) {
-            cout << "En x: " << i << " En y: " << j << " tiene valor de: " << matri[i][j] << endl;
+
+// Función principal para el algoritmo de A*
+vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
+    // Crear el nodo de inicio y de destino
+    Node* start_node = new Node(start_x, start_y);
+    Node* end_node = new Node(end_x, end_y);
+
+    // Crear las listas abierta y cerrada
+    vector<Node*> open_list;
+    vector<Node*> closed_list;
+
+    // Añadir el nodo de inicio a la lista abierta
+    open_list.push_back(start_node);
+
+    // Repetir hasta que la lista abierta esté vacía
+    while (!open_list.empty()) {
+        // Encontrar el nodo con menor costo f en la lista abierta
+        Node* current_node = open_list[0];
+        for (int i = 1; i < open_list.size(); i++) {
+            if (open_list[i]->f < current_node->f) {
+                current_node = open_list[i];
+            }
+        }
+
+        // Mover el nodo actual de la lista abierta a la cerrada
+        open_list.erase(remove(open_list.begin(), open_list.end(), current_node), open_list.end());
+        closed_list.push_back(current_node);
+
+        // Si el nodo actual es el nodo de destino, reconstruir el camino
+        if (current_node->x == end_node->x && current_node->y == end_node->y) {
+            vector<Node*> path;
+            Node* node = current_node;
+            while (node != NULL) {
+                path.push_back(node);
+                node = node->parent;
+            }
+            reverse(path.begin(), path.end());
+            return path;
+        }
+
+        // Explorar los vecinos del nodo actual
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                // Ignorar el propio nodo actual y los nodos diagonales
+                if ((i == 0 && j == 0) || (i != 0 && j != 0)) {
+                    continue;
+                }
+
+                int new_x = current_node->x + i;
+                int new_y = current_node->y + j;
+
+                // Ignorar los nodos fuera de los límites del mapa
+                if (new_x < 0 || new_x >= guia || new_y < 0 || new_y >= guia) {
+                    continue;
+                }
+
+                // Ignorar los nodos que son muros
+                if (matrix[new_y][new_x] == 1) {
+                    continue;
+                }
+
+                // Crear el nuevo nodo y calcular su valor f
+                Node* neighbor = new Node(new_x, new_y);
+                neighbor->parent = current_node;
+                neighbor->g = current_node->g + 1;
+                neighbor->h = heuristic(neighbor, end_node);
+                neighbor->f = neighbor->g + neighbor->h;
+
+                // Si el vecino ya está en la lista cerrada, ignorarlo
+                if (inClosedList(closed_list, neighbor)) {
+                    delete neighbor;
+                    continue;
+                }
+
+                // Si el vecino ya está en la lista abierta, actualizar su valor f si es menor
+                if (inOpenList(open_list, neighbor)) {
+                    Node* existing_node = getNodeFromList(open_list, neighbor);
+                    if (neighbor->g < existing_node->g) {
+                        existing_node->g = neighbor->g;
+                        existing_node->f = existing_node->g + existing_node->h;
+                        existing_node->parent = neighbor->parent;
+                    }
+                    delete neighbor;
+                    continue;
+                }
+
+                // Agregar el vecino a la lista abierta
+                open_list.push_back(neighbor);
+            }
         }
     }
-}
 
+    // Si llegamos aquí, no se encontró un camino válido
+    return std::vector<Node*>();
+}
 
 vector<pair<int, int>> backtracking(int matriz[guia][guia], int start_row, int start_col, int end_row, int end_col) {
     // Verificar si las coordenadas de inicio y final son válidas
@@ -271,7 +359,6 @@ vector<pair<int, int>> backtracking(int matriz[guia][guia], int start_row, int s
         cout << "Coordenadas de inicio o final inválidas" << endl;
         return {};
     }
-    prueba(matriz);
 
     // Declarar una pila para rastrear el camino y un conjunto para rastrear las celdas visitadas
     vector<pair<int, int>> camino;
@@ -606,74 +693,98 @@ void Enemy::moveast(){
 
 
 void Enemy::newPos() {
-    const int minima_distancia = 3;
+    const int minima_distancia = 5;
     int row, col;
     int* pos= new int[2];
-    int* posp= player->getPos();
+    int* posp;
+    posp= player->getPos();
     std::srand(std::time(nullptr));
+    int y2 = posp[0];
+    int x2 = posp[1];
     while(true){ 
-        int x1 = std::rand() % 10;
-        int y1 = std::rand() % 10;
-        for (int i = 0; i < 4; i++) {
-            int y2 = posp[0];
-            int x2 = posp[1];
-            double distancia = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));    
-            if (distancia < minima_distancia) {
-                x=y1*guia2;
-                y=x1*guia2;
-
-            }
+        int x1 = (std::rand()+numEnemigo) % 10;
+        int y1 = (std::rand()+numEnemigo) % 10;
+ 
+        double distancia = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));    
+        if (distancia > minima_distancia && matrix[y1][x1]!=1) {
+            cout<<matrix[y1][x1]<<endl;
+            x=y1*guia2;
+            y=x1*guia2;
+            cout<<y<<endl;
+            cout<<x<<endl;
+            return;
         }
+        
     }
   
 }
 
 
-void Enemy::render() {
-    // Renderizar la textura del jugador en la posición actual
-    //Enemy::move();
-    int* pos;
-    int* pos2;
-    std::vector<std::vector<int>> vector1;
-    std::vector<Node *> ruta1;
-    std::vector<pair<int, int>> ruta2;
-    if(player->getpoderD() && buscando==false){
-        buscando=true;
-        if(numEnemigo%2==0){
+
+void Enemy::desactivar() {
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    newPos();
+    muerto= false;
+}
+
+void Enemy::render(SDL_Renderer* render1, SDL_Surface* surface1) {
+    if(muerto== false){
+        // Renderizar la textura del jugador en la posición actual
+        //Enemy::move();
+        int* pos;
+        int* pos2;
+        std::vector<std::vector<int>> vector1;
+        std::vector<Node *> ruta1;
+        std::vector<pair<int, int>> ruta2;
+        pos= player->getPos();
+        if(pos[0]==y/guia2 && pos[1]==x/guia2){
+            if(player->getpoderA()){
+                muerto= true;
+                player->puntos();
+                std::thread hilo(&Enemy::desactivar, this);
+                hilo.detach();
+            } else{
+                player->reducirVida();
+            }
+            
+        }
+        if(player->getpoderD()==false){
+            buscando=false;
+        }
+        if(player->getpoderD() && buscando==false){
+            buscando=true;
+            if(numEnemigo%2==0){
+                pos= player->getPoder();
+                back= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
+            } else{
+                pos= player->getPoder();
+                vector1= transformMatrix(matrix);
+                ast= astarP(vector1, x/guia2, y/guia2, pos[0], pos[1]);
+            }
+        } else if(buscando== true){
             pos= player->getPoder();
-            back= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
+            if(pos[0]==y/guia2 && pos[1]==x/guia2){
+                player->quitar();
+            }
+            if(numEnemigo%2==0){
+                Enemy::moveback();
+            } else{
+                Enemy::moveast();
+            }
         } else{
-            pos= player->getPoder();
+            pos= player->getPos();
             vector1= transformMatrix(matrix);
             ast= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
-        }
-    } else if(buscando== true){
-        pos= player->getPoder();
-        if(pos[0]==y/guia2 && pos[1]==x/guia2){
-            player->quitar();
-        }
-        if(numEnemigo%2==0){
-            Enemy::moveback();
-        } else{
             Enemy::moveast();
         }
-    } else{
-        pos= player->getPos();
-        if(pos[0]==y/guia2 && pos[1]==x/guia2){
-            player->reducirVida();
-        }
-        pos= player->getPos();
-        vector1= transformMatrix(matrix);
-        ast= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
-        Enemy::moveast();
+        int posE[2];
+        posE[0]= y/guia2;
+        posE[1]= x/guia2;
+        player->setEnemigosPos(numEnemigo, posE);
+        SDL_Rect rect1 = { x, y, guia2, guia2};
+        SDL_RenderCopy(render1, texture, NULL, &rect1);
+        SDL_RenderPresent(render1);
     }
-    int posE[2];
-    posE[0]= y/guia2;
-    posE[1]= x/guia2;
-    player->setEnemigosPos(numEnemigo, posE);
-    SDL_Rect rect = { x, y, guia2, guia2};
-    SDL_RenderCopy(renderer, texture, NULL, &rect);
-    SDL_RenderPresent(renderer); 
 }
 
 

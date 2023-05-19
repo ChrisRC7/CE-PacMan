@@ -51,7 +51,7 @@ void matrizrandom(){
         
     }
 
-    for (int i = 0; i < rowm; i++)
+    /*for (int i = 0; i < rowm; i++)
     {
         for (int j = 0; j < colm; j++)
         {
@@ -60,7 +60,7 @@ void matrizrandom(){
             }
         }
         
-    }
+    }*/
 
     for (int i = 0; i < rowm; i++)
     {
@@ -120,84 +120,69 @@ int main(int argc, char* argv[]) {
     bool marcador3= true;
     SDL_Event event;
     Player player(renderer, matrix);
-    /*Enemy enemy1(renderer, matrix, "img/red.png", &player, 1);
+    Enemy enemy1(renderer, matrix, "img/red.png", &player, 1);
     Enemy enemy2(renderer, matrix, "img/light.png", &player, 2);
     Enemy enemy3(renderer, matrix, "img/orange.png", &player, 3);
-    Enemy enemy4(renderer, matrix, "img/pink.png", &player, 4);*/
+    Enemy enemy4(renderer, matrix, "img/pink.png", &player, 4);
     
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
             }
-            /*if(player.getvida()==0){
-                running==false;
-            }
-            if(player.getnivel()==1){
-                enemy1.render();
-                player.render(renderer, surface);
-                cout<<"1"<<endl;
-            }
-            if(player.getnivel()==2 && marcador1){
-                marcador1= false;
-                matrizrandom();
-                player.setmatrix(matrix);
-                enemy1.setmatrix(matrix);
-                enemy2.setmatrix(matrix);
-            }
-            if(player.getnivel()==2 and marcador1== false){
-                enemy1.render();
-                enemy2.render();
-                player.render(renderer, surface);
-            }
-            if(player.getnivel()==3 && marcador2){
-                marcador2= false;
-                matrizrandom();
-                player.setmatrix(matrix);
-                enemy1.setmatrix(matrix);
-                enemy2.setmatrix(matrix);
-                enemy3.setmatrix(matrix);
-            }
-            if(player.getnivel()==3 and marcador2== false){
-                enemy1.render();
-                enemy2.render();
-                enemy3.render();
-                player.render(renderer, surface);
-            }
-            if(player.getnivel()==4 && marcador3){
-                marcador3= false;
-                matrizrandom();
-                player.setmatrix(matrix);
-                enemy1.setmatrix(matrix);
-                enemy2.setmatrix(matrix);
-                enemy3.setmatrix(matrix);
-                enemy4.setmatrix(matrix);
-            }
-            if(player.getnivel()==4 and marcador3== false){
-                enemy1.render();
-                enemy2.render();
-                enemy3.render();
-                enemy4.render();
-                player.render(renderer, surface);
-            }*/
             player.handleEvent(event);
+        }
+        if(player.getvida()<=0 or player.getnivel()>=5){
+                running=false;
+        }
+        if(player.getnivel()==1){
             player.render(renderer, surface);
-            //enemy1.handleEvent(event);
-            /*if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
-              switch (event.key.keysym.sym) {
-                  case SDLK_j:
-                      for (int i = 0; i < 25; i++) {
-                      for (int j = 0; j < 25; j++) {
-                          cout << "En x: " << i << " En y: " << j << " tiene valor de: " << matrix[i][j] << endl;
-                      }
-                      }
-                      break;
-              }
-            }*/
-            
-          
-
-
+            enemy1.render(renderer, surface);  
+        }
+        if(player.getnivel()==2 && marcador1){
+            marcador1= false;
+            matrizrandom();
+            player.resetpos();
+            player.setmatrix(matrix);
+            enemy1.setmatrix(matrix);
+            enemy2.setmatrix(matrix);
+        }
+        if(player.getnivel()==2 and marcador1== false){
+            player.render(renderer, surface);
+            enemy2.render(renderer, surface);
+            enemy1.render(renderer, surface);
+        }
+        if(player.getnivel()==3 && marcador2){
+            marcador2= false;
+            matrizrandom();
+            player.resetpos();
+            player.setmatrix(matrix);
+            enemy1.setmatrix(matrix);
+            enemy2.setmatrix(matrix);
+            enemy3.setmatrix(matrix);
+        }
+        if(player.getnivel()==3 and marcador2== false){
+            player.render(renderer, surface);
+            enemy1.render(renderer, surface);
+            enemy2.render(renderer, surface);
+            enemy3.render(renderer, surface);
+        }
+        if(player.getnivel()==4 && marcador3){
+            marcador3= false;
+            matrizrandom();
+            player.resetpos();
+            player.setmatrix(matrix);
+            enemy1.setmatrix(matrix);
+            enemy2.setmatrix(matrix);
+            enemy3.setmatrix(matrix);
+            enemy4.setmatrix(matrix);
+        }
+        if(player.getnivel()==4 and marcador3== false){
+            player.render(renderer, surface);
+            enemy1.render(renderer, surface);
+            enemy2.render(renderer, surface);
+            enemy3.render(renderer, surface);
+            enemy4.render(renderer, surface);
         }
         //SDL_RenderCopy(renderer, texture, NULL, NULL);
         
