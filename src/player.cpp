@@ -54,7 +54,7 @@ Player::~Player() {
 
 
 void Player::desactivar() {
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(6));
     poderA=false;
     cout<<"se desac"<<endl;
 }
@@ -215,7 +215,7 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
         nivel++;
     }
 
-    char texto1[30];
+    /*char texto1[30];
     char texto2[30];
     char texto3[30];
     snprintf(texto1, sizeof(texto1), "Vida: %d", vida); // Formatear el texto con el valor del entero
@@ -232,7 +232,7 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     // Posición del texto en la pantalla
     SDL_Rect textRect1 = {640, 0, textSurface1->w, textSurface1->h};
     SDL_Rect textRect2 = {640, 30, textSurface2->w, textSurface2->h};
-    SDL_Rect textRect3 = {640, 60, textSurface3->w, textSurface3->h};
+    SDL_Rect textRect3 = {640, 60, textSurface3->w, textSurface3->h};*/
 
 
     SDL_Rect cellRect = { 10, 0, guia, guia };
@@ -242,9 +242,9 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     SDL_RenderCopy(render2, texture1, NULL, NULL);
     SDL_RenderPresent(render2);
     // Renderizar la textura de texto en el renderizador
-    SDL_RenderCopy(renderer, textTexture1, NULL, &textRect1);
+    /*SDL_RenderCopy(renderer, textTexture1, NULL, &textRect1);
     SDL_RenderCopy(renderer, textTexture2, NULL, &textRect2);
-    SDL_RenderCopy(renderer, textTexture3, NULL, &textRect3);
+    SDL_RenderCopy(renderer, textTexture3, NULL, &textRect3);*/
     Player::move();
     SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
@@ -299,8 +299,8 @@ int* getRandomPosition(int enemigos[4][2]) {
 void Player::reducirVida(){
     --vida;
     int* newPos= getRandomPosition(enemigos);
-    x= newPos[1]*64;
-    y= newPos[0]*64;
+    x= newPos[1]*guia2;
+    y= newPos[0]*guia2;
 }
 
 bool Player::getpoderA() {
@@ -316,4 +316,30 @@ int* Player::getPoder(){
     pos[0]= podery/guia2;
     pos[1]= poderx/guia2;
     return pos;
+}
+
+void Player::quitar(){
+    poderD=false;
+    matrix[podery][poderx]=2;
+}
+
+int Player::getvida(){
+    return vida;
+}
+
+
+void Player::setmatrix(int mat[guia][guia]){
+    for (int i = 0; i < guia; i++)
+    {
+        for (int j = 0; j < guia; j++)
+        {
+            matrix[i][j]= mat[i][j];
+        }
+        
+    }
+}
+
+void Player::resetpos(){
+    x=0;
+    y=0;
 }

@@ -35,6 +35,7 @@ public:
     void newPos();
     void moveback();
     void moveast();
+    void setmatrix(int mat[guia][guia]);
 
 
 
@@ -47,6 +48,7 @@ private:
     int x;
     int y;
     int numEnemigo;
+    bool buscando;
     int matrix[guia][guia];
     std::string dirrection;
     Player* player;

@@ -8,8 +8,8 @@ using namespace std;
 
 Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[guia][guia], const char* img, Player* player1, int numEnem) {
     // Cargar la imagen del jugador
-    x= 0;
-    y= 0;
+    Enemy::newPos();
+    buscando= false;
     numEnemigo= numEnem;
     player= player1;
     SDL_Surface* surface = IMG_Load(img);
@@ -605,6 +605,30 @@ void Enemy::moveast(){
 }
 
 
+void Enemy::newPos() {
+    const int minima_distancia = 3;
+    int row, col;
+    int* pos= new int[2];
+    int* posp= player->getPos();
+    std::srand(std::time(nullptr));
+    while(true){ 
+        int x1 = std::rand() % 10;
+        int y1 = std::rand() % 10;
+        for (int i = 0; i < 4; i++) {
+            int y2 = posp[0];
+            int x2 = posp[1];
+            double distancia = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));    
+            if (distancia < minima_distancia) {
+                x=y1*guia2;
+                y=x1*guia2;
+
+            }
+        }
+    }
+  
+}
+
+
 void Enemy::render() {
     // Renderizar la textura del jugador en la posición actual
     //Enemy::move();
@@ -613,7 +637,8 @@ void Enemy::render() {
     std::vector<std::vector<int>> vector1;
     std::vector<Node *> ruta1;
     std::vector<pair<int, int>> ruta2;
-    if(player->getpoderD()){
+    if(player->getpoderD() && buscando==false){
+        buscando=true;
         if(numEnemigo%2==0){
             pos= player->getPoder();
             back= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
@@ -622,8 +647,43 @@ void Enemy::render() {
             vector1= transformMatrix(matrix);
             ast= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
         }
+    } else if(buscando== true){
+        pos= player->getPoder();
+        if(pos[0]==y/guia2 && pos[1]==x/guia2){
+            player->quitar();
+        }
+        if(numEnemigo%2==0){
+            Enemy::moveback();
+        } else{
+            Enemy::moveast();
+        }
+    } else{
+        pos= player->getPos();
+        if(pos[0]==y/guia2 && pos[1]==x/guia2){
+            player->reducirVida();
+        }
+        pos= player->getPos();
+        vector1= transformMatrix(matrix);
+        ast= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
+        Enemy::moveast();
     }
+    int posE[2];
+    posE[0]= y/guia2;
+    posE[1]= x/guia2;
+    player->setEnemigosPos(numEnemigo, posE);
     SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_RenderPresent(renderer); 
+}
+
+
+void Enemy::setmatrix(int mat[guia][guia]){
+    for (int i = 0; i < guia; i++)
+    {
+        for (int j = 0; j < guia; j++)
+        {
+            matrix[i][j]= mat[i][j];
+        }
+        
+    }
 }

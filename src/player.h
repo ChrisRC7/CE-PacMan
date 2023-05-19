@@ -25,6 +25,10 @@ public:
     int* getPoder();
     void desactivar();
     int getnivel();
+    void quitar();
+    int getvida();
+    void setmatrix(int mat[guia][guia]);
+    void resetpos();
 
 
 
