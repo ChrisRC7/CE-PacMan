@@ -217,17 +217,22 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
 
     char texto1[30];
     char texto2[30];
+    char texto3[30];
     snprintf(texto1, sizeof(texto1), "Vida: %d", vida); // Formatear el texto con el valor del entero
     snprintf(texto2, sizeof(texto2), "Puntaje: %d", puntaje); // Formatear el texto con el valor del entero
+    snprintf(texto3, sizeof(texto3), "Nivel: %d", nivel); // Formatear el texto con el valor del entero
     SDL_Surface* textSurface1 = TTF_RenderText_Solid(font, texto1, color);
     SDL_Surface* textSurface2 = TTF_RenderText_Solid(font, texto2, color);
+    SDL_Surface* textSurface3 = TTF_RenderText_Solid(font, texto3, color);
 
     // Crear una textura a partir de la superficie de texto
     SDL_Texture* textTexture1 = SDL_CreateTextureFromSurface(renderer, textSurface1);
     SDL_Texture* textTexture2 = SDL_CreateTextureFromSurface(renderer, textSurface2);
+    SDL_Texture* textTexture3 = SDL_CreateTextureFromSurface(renderer, textSurface3);
     // Posición del texto en la pantalla
     SDL_Rect textRect1 = {640, 0, textSurface1->w, textSurface1->h};
     SDL_Rect textRect2 = {640, 30, textSurface2->w, textSurface2->h};
+    SDL_Rect textRect3 = {640, 60, textSurface3->w, textSurface3->h};
 
 
     SDL_Rect cellRect = { 10, 0, guia, guia };
@@ -239,6 +244,7 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     // Renderizar la textura de texto en el renderizador
     SDL_RenderCopy(renderer, textTexture1, NULL, &textRect1);
     SDL_RenderCopy(renderer, textTexture2, NULL, &textRect2);
+    SDL_RenderCopy(renderer, textTexture3, NULL, &textRect3);
     Player::move();
     SDL_Rect rect = { x, y, guia2, guia2};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
