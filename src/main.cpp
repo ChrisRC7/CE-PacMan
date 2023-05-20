@@ -10,6 +10,14 @@
 #include "enemy.cpp"
 using namespace std;
 
+#include <cstring>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#include <thread>
+
+#include "socket.cpp"
 
 const int rowm= 10;
 const int colm= 10;
@@ -17,12 +25,17 @@ const int colm= 10;
 const int WINDOW_WIDTH = 830;
 const int WINDOW_HEIGHT = 630;
 const int CELL_SIZE = 10;
-int matrix[rowm][colm];
 
-void matrizrandom(){
+
+int main(int argc, char* argv[]) {
+    Socket socket;
+    thread socketThread(&Socket::startListening, &socket);
+
     std::srand(std::time(nullptr));
     int num1 = 0, num2 = 1;
     int p1=10, p2= 10;
+
+    int matrix[rowm][colm];
     
     for (int i = 0; i < rowm; i++)
     {
@@ -51,7 +64,7 @@ void matrizrandom(){
         
     }
 
-    /*for (int i = 0; i < rowm; i++)
+    for (int i = 0; i < rowm; i++)
     {
         for (int j = 0; j < colm; j++)
         {
@@ -60,7 +73,7 @@ void matrizrandom(){
             }
         }
         
-    }*/
+    }
 
     for (int i = 0; i < rowm; i++)
     {
@@ -77,10 +90,6 @@ void matrizrandom(){
         }
         
     }
-}
-
-int main(int argc, char* argv[]) {
-    matrizrandom();
     
     // Inicializar SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -112,18 +121,21 @@ int main(int argc, char* argv[]) {
 
     // Crear la textura a partir de la superficie
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+
+
+    // Actualizar la ventana
+    //SDL_RenderPresent(renderer);
+
+    
+    // Crear un rectángulo SDL para representar la posición de la imagen
+    //SDL_Rect destRect = { 0, 0, image->w, image->h };
     
     // Esperar hasta que se cierre la ventana
     bool running = true;
-    bool marcador1= true;
-    bool marcador2= true;
-    bool marcador3= true;
     SDL_Event event;
     Player player(renderer, matrix);
-    Enemy enemy1(renderer, matrix, "img/red.png", &player, 1);
-    Enemy enemy2(renderer, matrix, "img/light.png", &player, 2);
-    Enemy enemy3(renderer, matrix, "img/orange.png", &player, 3);
-    Enemy enemy4(renderer, matrix, "img/pink.png", &player, 4);
+    Enemy enemy1(renderer, matrix, "img/red.png", &player, 0);
     
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -131,61 +143,26 @@ int main(int argc, char* argv[]) {
                 running = false;
             }
             player.handleEvent(event);
-        }
-        if(player.getvida()<=0 or player.getnivel()>=5){
-                running=false;
-        }
-        if(player.getnivel()==1){
-            player.render(renderer, surface);
-            enemy1.render(renderer, surface);  
-        }
-        if(player.getnivel()==2 && marcador1){
-            marcador1= false;
-            matrizrandom();
-            player.resetpos();
-            player.setmatrix(matrix);
-            enemy1.setmatrix(matrix);
-            enemy2.setmatrix(matrix);
-        }
-        if(player.getnivel()==2 and marcador1== false){
-            player.render(renderer, surface);
-            enemy2.render(renderer, surface);
-            enemy1.render(renderer, surface);
-        }
-        if(player.getnivel()==3 && marcador2){
-            marcador2= false;
-            matrizrandom();
-            player.resetpos();
-            player.setmatrix(matrix);
-            enemy1.setmatrix(matrix);
-            enemy2.setmatrix(matrix);
-            enemy3.setmatrix(matrix);
-        }
-        if(player.getnivel()==3 and marcador2== false){
-            player.render(renderer, surface);
-            enemy1.render(renderer, surface);
-            enemy2.render(renderer, surface);
-            enemy3.render(renderer, surface);
-        }
-        if(player.getnivel()==4 && marcador3){
-            marcador3= false;
-            matrizrandom();
-            player.resetpos();
-            player.setmatrix(matrix);
-            enemy1.setmatrix(matrix);
-            enemy2.setmatrix(matrix);
-            enemy3.setmatrix(matrix);
-            enemy4.setmatrix(matrix);
-        }
-        if(player.getnivel()==4 and marcador3== false){
-            player.render(renderer, surface);
-            enemy1.render(renderer, surface);
-            enemy2.render(renderer, surface);
-            enemy3.render(renderer, surface);
-            enemy4.render(renderer, surface);
+            enemy1.handleEvent(event);
+            /*if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
+              switch (event.key.keysym.sym) {
+                  case SDLK_j:
+                      for (int i = 0; i < 25; i++) {
+                      for (int j = 0; j < 25; j++) {
+                          cout << "En x: " << i << " En y: " << j << " tiene valor de: " << matrix[i][j] << endl;
+                      }
+                      }
+                      break;
+              }
+            }*/
+            
+          
+
+
         }
         //SDL_RenderCopy(renderer, texture, NULL, NULL);
-        
+        //enemy1.render();
+        player.render(renderer, surface);
         //SDL_DestroyTexture(texture);
     
         // Actualizar la pantalla
@@ -199,5 +176,71 @@ int main(int argc, char* argv[]) {
     IMG_Quit();
     SDL_Quit();
     
+    // Esperar a que el hilo de startListening() termine
+    socketThread.join();
+
     return 0;
+}
+
+
+void matrizrandom(){
+    std::srand(std::time(nullptr));
+    int num1 = 0, num2 = 1;
+    int p1=10, p2= 10;
+
+    int matrix[rowm][colm];
+    
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            matrix[i][j]=0;
+        }
+        
+    }
+    
+    for (int i = 1; i < rowm; i++)
+    {
+        for (int j = 1; j < colm; j++)
+        {
+            if (matrix[i+1][j+1]!=1 and matrix[i+1][j-1]!=1 and matrix[i-1][j+1]!=1 and matrix[i-1][j-1]!=1){
+                int rand_num = std::rand() % (p1 + p2) + 1; // Generar un número aleatorio entre 1 y la suma de las posibilidades
+                if (rand_num <= p1) {
+                    matrix[i][j]=1;
+                    p2+=3; // Aumentar la posibilidad del otro número
+                } else {
+                    p1++; // Aumentar la posibilidad del otro número
+                }
+            }
+            
+        }
+        
+    }
+
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            if (matrix[i][j]==0 and (matrix[i+1][j]==1 and matrix[i-1][j]==1)){
+                matrix[i][j]=1;
+            }
+        }
+        
+    }
+
+    for (int i = 0; i < rowm; i++)
+    {
+        for (int j = 0; j < colm; j++)
+        {
+            if (matrix[i][j]==0 and (matrix[i+1][j]==1 and matrix[i-1][j]==1 and matrix[i][j+1]==1 and matrix[i][j-1]==1)){
+                if (j<colm-1)
+                {
+                    matrix[i][j+1]=0;
+                } else{
+                    matrix[i][j-1]=0;
+                }
+            }
+        }
+        
+    }
 }
