@@ -6,6 +6,13 @@
 #include <cstdlib>  
 #include <ctime>
 
+#include "socket.cpp"
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <thread>
+#include <cstring>
+
 #include "player.cpp"
 #include "enemy.cpp"
 using namespace std;
@@ -23,6 +30,9 @@ int matrix[rowm][colm];
  * This function generates a random matrix with certain constraints.
  */
 void matrizrandom(){
+    Socket socket;
+    //thread socketThread(&Socket::startListening, &socket);
+
     std::srand(std::time(nullptr));
     int num1 = 0, num2 = 1;
     int p1=10, p2= 10;
@@ -213,5 +223,6 @@ int main(int argc, char* argv[]) {
     IMG_Quit();
     SDL_Quit();
     
+
     return 0;
 }
