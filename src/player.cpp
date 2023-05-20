@@ -6,6 +6,16 @@
 using namespace std;
 
 
+/**
+ * This function initializes a Player object with default values and loads an image for the player.
+ * 
+ * @param renderer1 SDL_Renderer pointer used to render graphics on the screen.
+ * @param matrix1 The parameter `matrix1` is an integer matrix of size `guia x guia` that represents
+ * the game board or maze where the player will move. It is used to initialize the `matrix` data member
+ * of the `Player` class.
+ * 
+ * @return Nothing is being returned in this constructor function.
+ */
 Player::Player(SDL_Renderer* renderer1, int matrix1[guia][guia]) {
     // Cargar la imagen del jugador
     x= 0;
@@ -53,15 +63,32 @@ Player::~Player() {
 }
 
 
+/**
+ * The function "desactivar" in the "Player" class sets the boolean variable "poderA" to false after a
+ * 5 second delay.
+ */
 void Player::desactivar() {
     std::this_thread::sleep_for(std::chrono::seconds(5));
     poderA=false;
 }
 
+/**
+ * This function returns the level of the player.
+ * 
+ * @return The function `getnivel()` is returning the value of the private member variable `nivel` of
+ * the `Player` class.
+ */
 int Player::getnivel(){
     return nivel;
 }
 
+/**
+ * This function handles keyboard events to move the player and perform certain actions.
+ * 
+ * @param event The SDL_Event object that contains information about the event that occurred, such as
+ * the type of event (e.g. key press, mouse movement, etc.) and any associated data (e.g. which key was
+ * pressed).
+ */
 void Player::handleEvent(SDL_Event& event) {
     // Manejar eventos de teclado para mover al jugador
     if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
@@ -98,6 +125,10 @@ void Player::handleEvent(SDL_Event& event) {
     }
 }
 
+/**
+ * This function updates the position of the player in a game, based on the direction they are moving
+ * and the obstacles in their path.
+ */
 void Player::move() {
     // Actualizar la posición del jugador
     if (dirrection == "up"){
@@ -167,6 +198,13 @@ void Player::move() {
     }
 }
 
+/**
+ * This function renders the game screen, including the player, the game board, and various text
+ * elements such as score and level.
+ * 
+ * @param render2 The SDL_Renderer object used to render the game screen.
+ * @param surface2 The surface to be rendered on.
+ */
 void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     Player::move();
     if(poderD==false && puntaje%200==0 && puntaje>199 && poderA==false){
@@ -250,6 +288,12 @@ void Player::render(SDL_Renderer* render2, SDL_Surface* surface2) {
     SDL_RenderPresent(renderer); 
 }
 
+/**
+ * This function renders the player's texture on the screen using SDL.
+ * 
+ * @param renderer1 renderer1 is a pointer to an SDL_Renderer object, which is responsible for
+ * rendering graphics to a window or screen. It is used to render the player's texture onto the screen.
+ */
 void Player::getTexture(SDL_Renderer* renderer1){
     SDL_RenderCopy(renderer1, texture, NULL, &destRect);
     SDL_RenderPresent(renderer); 
@@ -258,6 +302,11 @@ void Player::getTexture(SDL_Renderer* renderer1){
 
 
 
+/**
+ * The function returns the position of a player as an array of two integers.
+ * 
+ * @return An integer pointer to an array of two integers representing the position of the player.
+ */
 int* Player::getPos(){
     static int pos[2];
     pos[0]= y/guia2;
@@ -265,12 +314,35 @@ int* Player::getPos(){
     return pos;
 }
 
+/**
+ * This function sets the position of an enemy for a player in a 2D array.
+ * 
+ * @param i The index of the enemy whose position is being set.
+ * @param pos pos is an array of two integers representing the position of an enemy in a 2D space. The
+ * first integer (pos[0]) represents the x-coordinate and the second integer (pos[1]) represents the
+ * y-coordinate.
+ */
 void Player::setEnemigosPos(int i, int pos[2]){
     enemigos[i][0]= pos[0];
     enemigos[i][1]= pos[1];
 }
 
 
+/**
+ * The function generates a random position on a matrix while ensuring a minimum distance from a set of
+ * enemy positions.
+ * 
+ * @param enemigos enemigos is a 2D array of integers with 4 rows and 2 columns. Each row represents
+ * the position of an enemy on a grid, where the first column is the y-coordinate and the second column
+ * is the x-coordinate.
+ * @param matrix The "matrix" parameter is a 2D array representing a game board or map. The dimensions
+ * of the array are "guia" by "guia", and each element of the array represents a cell on the board. The
+ * value of each element can be either 0 or 1,
+ * 
+ * @return a pointer to an array of two integers, which represents the coordinates of a random position
+ * on the matrix that is at least a certain distance away from all the enemy positions. If no such
+ * position is found after an infinite loop, the function returns a null pointer.
+ */
 int* getRandomPosition(int enemigos[4][2], int matrix[guia][guia]) {
     const int minima_distancia = 5;
     int row, col;
@@ -295,6 +367,10 @@ int* getRandomPosition(int enemigos[4][2], int matrix[guia][guia]) {
 }
 
 
+/**
+ * This function reduces the player's life by one and randomly assigns a new position on the game
+ * matrix.
+ */
 void Player::reducirVida(){
     --vida;
     int* newPos= getRandomPosition(enemigos, matrix);
@@ -302,28 +378,59 @@ void Player::reducirVida(){
     y= newPos[0]*guia2;
 }
 
+/**
+ * The function returns the value of the boolean variable "poderA" for a Player object.
+ * 
+ * @return The function `getpoderA` is returning the value of the boolean variable `poderA`.
+ */
 bool Player::getpoderA() {
     return poderA;
 }
 
+/**
+ * The function returns the value of the boolean variable "poderD" for a Player object.
+ * 
+ * @return The function `getpoderD` is returning the value of the boolean variable `poderD`.
+ */
 bool Player::getpoderD() {
     return poderD;
 }
 
+/**
+ * The function returns a pointer to the "posPoder" variable of the "Player" class in C++.
+ * 
+ * @return A pointer to an integer array called `posPoder` is being returned.
+ */
 int* Player::getPoder(){
     return posPoder;
 }
 
+/**
+ * The function "quitar" sets a boolean variable to false and updates a matrix element.
+ */
 void Player::quitar(){
     poderD=false;
     matrix[posPoder[0]][posPoder[1]]=2;
 }
 
+/**
+ * The function "getvida" returns the current value of the "vida" variable for a Player object.
+ * 
+ * @return The function `getvida()` is returning the value of the private member variable `vida` of the
+ * `Player` class.
+ */
 int Player::getvida(){
     return vida;
 }
 
 
+/**
+ * The function sets the matrix of a player object with the values of a given 2D array.
+ * 
+ * @param mat mat is a 2D integer array that represents a matrix. The size of the matrix is defined by
+ * the constant variable "guia". The function "setmatrix" takes this matrix as a parameter and sets the
+ * values of the member variable "matrix" of the class Player to the same values as
+ */
 void Player::setmatrix(int mat[guia][guia]){
     for (int i = 0; i < guia; i++)
     {
@@ -335,6 +442,9 @@ void Player::setmatrix(int mat[guia][guia]){
     }
 }
 
+/**
+ * The function resets the position, life, and power status of a player object in a game.
+ */
 void Player::resetpos(){
     x=0;
     y=0;
@@ -343,6 +453,19 @@ void Player::resetpos(){
     poderD= false;
 }
 
+/**
+ * The function "puntos" adds 50 points to the player's score.
+ */
 void Player::puntos(){
     puntaje+=50;
+}
+
+/**
+ * The function "getpuntos" returns the value of the variable "puntaje" in the class "Player".
+ * 
+ * @return The function `getpuntos()` is returning the value of the `puntaje` variable, which is the
+ * score of the player.
+ */
+int Player::getpuntos(){
+    return puntaje;
 }

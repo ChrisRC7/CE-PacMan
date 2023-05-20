@@ -27,7 +27,6 @@ class Enemy {
 public:
     Enemy(SDL_Renderer* renderer, int matrix[guia][guia], const char* img, Player* player, int numEnemigo);
     ~Enemy();
-    void handleEvent(SDL_Event& e);
     void move(int rut[2]);
     void render(SDL_Renderer* render, SDL_Surface* surface);
     void getTexture(SDL_Renderer* renderer1);

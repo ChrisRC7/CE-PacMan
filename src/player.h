@@ -30,6 +30,7 @@ public:
     void setmatrix(int mat[guia][guia]);
     void resetpos();
     void puntos();
+    int getpuntos();
 
 
 

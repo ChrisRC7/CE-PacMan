@@ -6,6 +6,22 @@
 using namespace std;
 
 
+/**
+ * This function creates a new enemy object with a given image, matrix, and player object.
+ * 
+ * @param renderer1 The SDL_Renderer object used to render graphics in the game.
+ * @param matrix1 matrix1 is a 2D integer array that represents the game board or map where the enemy
+ * will move. It contains information about the position of walls, obstacles, and other game elements
+ * that the enemy needs to avoid or interact with.
+ * @param img The parameter "img" is a const char pointer that represents the file path of the image
+ * that will be loaded for the enemy object.
+ * @param player1 player1 is a pointer to an object of the Player class. It is used to keep track of
+ * the player's position and to determine the enemy's behavior.
+ * @param numEnem numEnem is an integer variable that represents the number of the enemy being created.
+ * It is used to differentiate between multiple enemies in the game.
+ * 
+ * @return The function does not have a return statement, so nothing is being returned.
+ */
 Enemy::Enemy(SDL_Renderer* renderer1, int matrix1[guia][guia], const char* img, Player* player1, int numEnem) {
     // Cargar la imagen del jugador
     buscando= false;
@@ -40,6 +56,14 @@ Enemy::~Enemy() {
     //SDL_DestroyTexture(texture);
 }
 
+/**
+ * The function moves an enemy object in a game based on a given path and checks for obstacles in the
+ * way.
+ * 
+ * @param rut The parameter "rut" is an integer array of size 2 that represents the target position for
+ * the enemy to move towards. The first element of the array (rut[0]) represents the y-coordinate of
+ * the target position, and the second element (rut[1]) represents the x-coordinate of the
+ */
 void Enemy::move(int rut[2]) {
     int y1= rut[0];
     int x1= rut[1];
@@ -52,47 +76,67 @@ void Enemy::move(int rut[2]) {
     } else {
         y-=guia2;
     }
-    // Actualizar la posición del jugador
-    /*if (dirrection == "up"){
-        if(matrix[y/25 - 1][x/25] != 1 && y>0){
-            y -= 25;
-        }
-    } else if(dirrection == "down"){
-        if(matrix[y/25 + 1][x/25] != 1 && y<600){
-            y += 25;
-        }
-    } else if(dirrection == "left"){
-        if(matrix[y/25][x/25 - 1]!= 1 && x>0){
-            x -= 25;
-        }
-    } else{
-        if(matrix[y/25][x/25 + 1] != 1 && x<600){
-            x += 25;
-        }
-    }*/
 }
 
+/**
+ * This function renders the enemy's texture on the screen using SDL.
+ * 
+ * @param renderer1 renderer1 is a pointer to an SDL_Renderer object, which is responsible for
+ * rendering graphics to a window or screen. It is used to render the texture of the enemy object onto
+ * the screen.
+ */
 void Enemy::getTexture(SDL_Renderer* renderer1){
     SDL_RenderCopy(renderer1, texture, NULL, &destRect);
     SDL_RenderPresent(renderer); 
 
 }
 
-
-
-// Función auxiliar para calcular la distancia Manhattan entre dos nodos
+/**
+ * The function calculates the Manhattan distance between two nodes in a grid.
+ * 
+ * @param a The parameter "a" is a pointer to a Node object.
+ * @param b The parameter "b" in the given code snippet is a pointer to a Node object.
+ * 
+ * @return The function `heuristic` takes two pointers to `Node` objects as arguments and calculates
+ * the Manhattan distance between the two nodes. It returns the sum of the absolute differences between
+ * the x-coordinates and y-coordinates of the two nodes.
+ */
 int heuristic(Node* a, Node* b) {
     return abs(a->x - b->x) + abs(a->y - b->y);
 }
 
-// Función auxiliar para buscar un nodo en un vector por sus coordenadas
+/**
+ * The function checks if a vector of nodes contains a specific node based on its x and y coordinates.
+ * 
+ * @param vec A vector of pointers to Node objects.
+ * @param node `node` is a pointer to a `Node` object. It is the node that we want to check if it
+ * exists in a vector of `Node` pointers (`vec`). The function `contains_node` returns a boolean value
+ * indicating whether the `node` exists in the `vec` vector or
+ * 
+ * @return The function `contains_node` returns a boolean value indicating whether a given `Node*`
+ * object is present in a vector of `Node*` objects or not. It uses the `find_if` algorithm from the
+ * `<algorithm>` library to search for the node in the vector based on its `x` and `y` coordinates. If
+ * the node is found, the function returns `true`, otherwise
+ */
 bool contains_node(vector<Node*>& vec, Node* node) {
     return find_if(vec.begin(), vec.end(), [&](Node* n) {
         return n->x == node->x && n->y == node->y;
     }) != vec.end();
 }
 
-// Función auxiliar para obtener un nodo de un vector por sus coordenadas
+/**
+ * The function returns a pointer to a node in a vector of nodes with a specific x and y coordinate, or
+ * NULL if it does not exist.
+ * 
+ * @param vec a vector of pointers to Node objects
+ * @param x The x-coordinate of the node being searched for.
+ * @param y The parameter "y" in the function "get_node" is an integer representing the y-coordinate of
+ * a node in a two-dimensional grid.
+ * 
+ * @return The function `get_node` returns a pointer to a `Node` object that has the specified `x` and
+ * `y` coordinates if it exists in the `vector<Node*>& vec`. If the node does not exist in the vector,
+ * it returns a null pointer.
+ */
 Node* get_node(vector<Node*>& vec, int x, int y) {
     auto it = find_if(vec.begin(), vec.end(), [&](Node* n) {
         return n->x == x && n->y == y;
@@ -103,6 +147,18 @@ Node* get_node(vector<Node*>& vec, int x, int y) {
     return NULL;
 }
 
+/**
+ * The function checks if a given node is present in a vector of nodes representing the open list.
+ * 
+ * @param open_list A vector of pointers to Node objects representing the open list in an A* search
+ * algorithm. The open list contains nodes that have been discovered but not yet explored.
+ * @param node The parameter "node" is a pointer to a Node object that we want to check if it is
+ * present in the vector "open_list". The function "inOpenList" checks if the given node is present in
+ * the open_list vector or not.
+ * 
+ * @return The function `inOpenList` returns a boolean value. It returns `true` if the input `node` is
+ * found in the `open_list` vector, and `false` otherwise.
+ */
 bool inOpenList(vector<Node*>& open_list, Node* node) {
     for (Node* open_node : open_list) {
         if (open_node == node) {
@@ -112,7 +168,18 @@ bool inOpenList(vector<Node*>& open_list, Node* node) {
     return false;
 }
 
-// Función para verificar si un nodo está en la lista cerrada
+/**
+ * The function checks if a given node is present in a vector of nodes representing a closed list.
+ * 
+ * @param closed_list A vector of pointers to Node objects representing the closed list in a
+ * pathfinding algorithm. The closed list contains nodes that have already been evaluated and expanded,
+ * and should not be revisited during the search.
+ * @param node The node parameter is a pointer to a Node object that we want to check if it is present
+ * in the closed_list vector.
+ * 
+ * @return a boolean value. It returns true if the given node is found in the closed_list vector, and
+ * false otherwise.
+ */
 bool inClosedList(vector<Node*>& closed_list, Node* node) {
     for (Node* n : closed_list) {
         if (n == node) {
@@ -122,6 +189,19 @@ bool inClosedList(vector<Node*>& closed_list, Node* node) {
     return false;
 }
 
+/**
+ * The function searches for a node in a list based on its x and y coordinates and returns it if found,
+ * otherwise returns NULL.
+ * 
+ * @param list A vector of pointers to Node objects.
+ * @param node The "node" parameter is a pointer to a Node object that we want to find in a vector of
+ * Node pointers called "list". The function iterates through the vector and compares the x and y
+ * coordinates of each Node object in the vector with the x and y coordinates of the input "node".
+ * 
+ * @return a pointer to a Node object that matches the x and y coordinates of the input node, if it
+ * exists in the input list. If there is no matching node in the list, the function returns a NULL
+ * pointer.
+ */
 Node* getNodeFromList(vector<Node*>& list, Node* node) {
     for (Node* list_node : list) {
         if (list_node->x == node->x && list_node->y == node->y) {
@@ -132,6 +212,11 @@ Node* getNodeFromList(vector<Node*>& list, Node* node) {
 }
 
 
+/**
+ * The function prints the x and y coordinates of each node in a vector of Node pointers.
+ * 
+ * @param list The parameter "list" is a vector of pointers to Node objects.
+ */
 void printList(vector<Node*> list) {
     for (Node* node : list) {
         cout << "(" << node->x << ", " << node->y << ")" << " -> ";
@@ -139,6 +224,16 @@ void printList(vector<Node*> list) {
     cout << endl;
 }
 
+/**
+ * The function transforms a 2D array into a vector of vectors in C++.
+ * 
+ * @param matrix The parameter `matrix` is a 2D array of integers with dimensions `guia` x `guia`.
+ * 
+ * @return The function `transformMatrix` returns a 2D vector of integers
+ * (`std::vector<std::vector<int>>`). The vector contains the same elements as the input matrix, which
+ * is a 2D array of integers (`int matrix[guia][guia]`). The function copies the elements of the matrix
+ * into the vector and returns the vector.
+ */
 std::vector<std::vector<int>> transformMatrix(int matrix[guia][guia]) {
     std::vector<std::vector<int>> result(guia, std::vector<int>(guia));
 
@@ -151,7 +246,21 @@ std::vector<std::vector<int>> transformMatrix(int matrix[guia][guia]) {
     return result;
 }
 
-// Función principal para el algoritmo de A*
+/**
+ * The function implements the A* algorithm to find the shortest path between two points in a matrix.
+ * 
+ * @param matrix a 2D vector representing the matrix or grid on which the A* algorithm will be applied.
+ * Each element of the matrix represents a cell in the grid and can have a value of either 0 or 1,
+ * where 0 represents an empty cell and 1 represents a blocked or obstacle cell
+ * @param start_x The x-coordinate of the starting point.
+ * @param start_y The y-coordinate of the starting point in the matrix.
+ * @param end_y The parameter "end_y" represents the y-coordinate of the destination node in the A*
+ * algorithm.
+ * @param end_x The x-coordinate of the destination node in the matrix.
+ * 
+ * @return a vector of Node pointers, which represents the path from the starting point to the ending
+ * point found by the A* algorithm. If no valid path is found, an empty vector is returned.
+ */
 vector<Node*> astarP(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
     // Crear el nodo de inicio y de destino
     Node* start_node = new Node(start_x, start_y);
@@ -257,8 +366,21 @@ vector<Node*> astarP(vector<vector<int>>& matrix, int start_x, int start_y, int 
     return std::vector<Node*>();
 }
 
-
-// Función principal para el algoritmo de A*
+/**
+ * The function implements the A* algorithm to find the shortest path between two points in a matrix.
+ * 
+ * @param matrix a 2D vector representing the matrix or grid on which the A* algorithm will be applied.
+ * The matrix contains values that represent the terrain or obstacles on the grid. A value of 1
+ * represents a wall or obstacle, while a value of 0 represents a clear path.
+ * @param start_x The x-coordinate of the starting point in the matrix.
+ * @param start_y The y-coordinate of the starting position in the matrix.
+ * @param end_y The parameter "end_y" represents the y-coordinate of the destination node in the
+ * matrix/grid.
+ * @param end_x The x-coordinate of the destination node.
+ * 
+ * @return a vector of Node pointers, which represents the path from the starting node to the ending
+ * node found using the A* algorithm.
+ */
 vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int end_y, int end_x) {
     // Crear el nodo de inicio y de destino
     Node* start_node = new Node(start_x, start_y);
@@ -353,6 +475,20 @@ vector<Node*> astar(vector<vector<int>>& matrix, int start_x, int start_y, int e
     return std::vector<Node*>();
 }
 
+/**
+ * The function backtracking() finds a path between two points in a matrix using a backtracking
+ * algorithm.
+ * 
+ * @param matriz a 2D array representing the grid where the pathfinding algorithm will be applied
+ * @param start_row The row index of the starting cell in the matrix.
+ * @param start_col Unfortunately, the parameter `start_col` is not provided in the code snippet. Can
+ * you please provide more context or the full code so I can assist you better?
+ * @param end_row The row coordinate of the end point in the matrix.
+ * @param end_col The column index of the end point in the matrix.
+ * 
+ * @return a vector of pairs of integers, representing the path from the starting cell to the ending
+ * cell in the given matrix. If no path is found, an empty vector is returned.
+ */
 vector<pair<int, int>> backtracking(int matriz[guia][guia], int start_row, int start_col, int end_row, int end_col) {
     // Verificar si las coordenadas de inicio y final son válidas
     if (matriz[start_row][start_col] == 1 && matriz[end_row][end_col] == 1) {
@@ -590,13 +726,19 @@ vector<pair<int, int>> backtracking(int matriz[guia][guia], int start_row, int s
     return {};
 }
 
-void printList2(vector<pair<int, int>> camino){
-    for (auto p : camino) {
-    cout << "(" << p.first << ", " << p.second << ") ";
-    }
-    cout << endl;
-}
-
+/**
+ * The function takes a vector of Node pointers and two integer coordinates, and returns the position
+ * of the first Node in the vector that does not match the given coordinates.
+ * 
+ * @param list A vector of pointers to Node objects.
+ * @param x2 The x-coordinate of the destination position where we want to move the node.
+ * @param y2 The parameter `y2` is an integer representing the y-coordinate of a point in a 2D plane.
+ * It is used as a reference point to find a node in a list of nodes with matching x and y coordinates.
+ * 
+ * @return The function `move1` returns either a pointer to the `pos` array (which contains the
+ * coordinates of the first node in the `list` that does not have the same coordinates as `(x2, y2)`),
+ * or a `nullptr` if all nodes in the `list` have the same coordinates as `(x2, y2)`.
+ */
 int* move1(vector<Node*> list, int x2, int y2) {
     int x1;
     int y1;
@@ -613,6 +755,20 @@ int* move1(vector<Node*> list, int x2, int y2) {
     return nullptr;
 }
 
+/**
+ * The function "move2" takes a vector of pairs representing a path, and two integers representing a
+ * current position, and returns the next position in the path.
+ * 
+ * @param camino `camino` is a vector of pairs of integers representing a path or a route. Each pair
+ * represents the coordinates of a point in the path. The first integer in the pair represents the
+ * y-coordinate and the second integer represents the x-coordinate.
+ * @param x2 The x-coordinate of the current position.
+ * @param y2 The parameter y2 is an integer representing the y-coordinate of a point.
+ * 
+ * @return The function `move2` returns a pointer to an array of integers. The array contains the
+ * coordinates of the next position in the given `camino` vector that is not equal to the input `x2`
+ * and `y2`. If there is no such position, it returns a null pointer.
+ */
 int* move2(vector<pair<int, int>> camino, int x2, int y2){
     int x1;
     int y1;
@@ -631,50 +787,10 @@ int* move2(vector<pair<int, int>> camino, int x2, int y2){
 }
 
 
-void Enemy::handleEvent(SDL_Event& event) {
-    // Manejar eventos de teclado para mover al jugador
-    int* pos;
-    int* pos2;
-    std::vector<std::vector<int>> vector1;
-    std::vector<Node *> ruta1;
-    std::vector<pair<int, int>> ruta2;
-    if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
-        switch (event.key.keysym.sym) {
-            case SDLK_r:
-                pos= player->getPos();
-                vector1= transformMatrix(matrix);
-                ruta1= astar(vector1, x/guia2, y/guia2, pos[0], pos[1]);
-                std::cout<<"La ruta es: "<<endl;
-                printList(ruta1);
-                pos2= move1(ruta1, x/guia2, y/guia2);
-                if (pos2!=nullptr){
-                    Enemy::move(pos2);
-                    std::cout<<pos2[0]<<endl;
-                    std::cout<<pos2[1]<<endl;
-                }
-                break;
 
-            case SDLK_t:
-                pos= player->getPos();
-                ruta2= backtracking(matrix, y/guia2, x/guia2, pos[0], pos[1]);
-                std::cout<<"La ruta es: "<<endl;
-                printList2(ruta2);
-                pos2= move2(ruta2,  x/guia2, y/guia2);
-                if (pos2!=nullptr){
-                    Enemy::move(pos2);
-                    std::cout<<pos2[0]<<endl;
-                    std::cout<<pos2[1]<<endl;
-                }
-                break;
-            case SDLK_h:
-                pos= player->getPos();
-                cout<<matrix[pos[0]+1][pos[1]]<<endl;
-                break;
-
-        }
-    }
-}
-
+/**
+ * The function moves the enemy back to its previous position.
+ */
 void Enemy::moveback(){
     int* pos2= move2(back,  x/guia2, y/guia2);
     if (pos2!=nullptr){
@@ -683,6 +799,10 @@ void Enemy::moveback(){
     }
 }
 
+/**
+ * The function moves an enemy object to the east and removes the first element from a vector called
+ * "ast".
+ */
 void Enemy::moveast(){
     int *pos2= move1(ast, x/guia2, y/guia2);
     if (pos2!=nullptr){
@@ -692,6 +812,12 @@ void Enemy::moveast(){
 }
 
 
+/**
+ * The function generates a new position for an enemy on a game board, ensuring it is a minimum
+ * distance away from the player and not on a blocked tile.
+ * 
+ * @return the new position (x,y) of the enemy on the game board.
+ */
 void Enemy::newPos() {
     const int minima_distancia = 5;
     int row, col;
@@ -721,12 +847,25 @@ void Enemy::newPos() {
 
 
 
+/**
+ * The function "desactivar" in the "Enemy" class waits for 5 seconds, updates the position, and sets
+ * the "muerto" variable to false.
+ */
 void Enemy::desactivar() {
     std::this_thread::sleep_for(std::chrono::seconds(5));
     newPos();
     muerto= false;
 }
 
+/**
+ * This function renders the enemy on the screen and controls its movement based on the player's
+ * position and power-ups.
+ * 
+ * @param render1 SDL_Renderer pointer used to render graphics on the screen.
+ * @param surface1 The parameter `surface1` is not used in the function `Enemy::render()`. It is
+ * declared but not referenced anywhere in the code. Therefore, it is not possible to determine its
+ * purpose without additional context or information.
+ */
 void Enemy::render(SDL_Renderer* render1, SDL_Surface* surface1) {
     if(muerto== false){
         // Renderizar la textura del jugador en la posición actual
@@ -788,6 +927,13 @@ void Enemy::render(SDL_Renderer* render1, SDL_Surface* surface1) {
 }
 
 
+/**
+ * The function sets the matrix of an enemy object with the values from a given 2D array.
+ * 
+ * @param mat mat is a 2D integer array that represents a matrix. The size of the matrix is guia x
+ * guia, where guia is a constant defined somewhere in the code. The function Enemy::setmatrix() takes
+ * this matrix as a parameter and sets the values of the matrix member variable of
+ */
 void Enemy::setmatrix(int mat[guia][guia]){
     for (int i = 0; i < guia; i++)
     {

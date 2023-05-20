@@ -19,6 +19,9 @@ const int WINDOW_HEIGHT = 630;
 const int CELL_SIZE = 10;
 int matrix[rowm][colm];
 
+/**
+ * This function generates a random matrix with certain constraints.
+ */
 void matrizrandom(){
     std::srand(std::time(nullptr));
     int num1 = 0, num2 = 1;
@@ -79,6 +82,17 @@ void matrizrandom(){
     }
 }
 
+/**
+ * This function initializes SDL, creates a window and renderer, renders game objects, and waits for
+ * the window to close before freeing resources and exiting.
+ * 
+ * @param argc The number of command line arguments passed to the program.
+ * @param argv argv is a pointer to an array of characters representing the command line arguments
+ * passed to the program. The first argument (argv[0]) is the name of the program itself, and the
+ * following arguments (argv[1], argv[2], etc.) are any additional arguments passed to the program. The
+ * 
+ * @return an integer value of 0.
+ */
 int main(int argc, char* argv[]) {
     matrizrandom();
     
