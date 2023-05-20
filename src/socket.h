@@ -2,20 +2,21 @@
 #define SOCKET_H
 
 #include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 
 class Socket {
-private:
-    int server_fd;
-    int new_socket;
-    int addrlen;
-    struct sockaddr_in address;
-    // Otros miembros privados
-
 public:
     Socket();
     ~Socket();
     void startListening();
-    // Otros métodos públicos
+
+private:
+    int server_fd;
+    int new_socket;
+    struct sockaddr_in address;
+    int addrlen;
 };
 
-#endif
+#endif  // SOCKET_H
